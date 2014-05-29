@@ -1,0 +1,9 @@
+cd scripts
+python download_import_cldr.py
+cd ..
+virtualenv venv
+venv\Scripts\activate.bat
+python setup.py import_cldr
+cd scripts
+python geoname_cldr25.py -o ..\_outputdata\geoname_CLDR_babel.csv
+python geoname_cldr25.py -o ..\_outputdata\geoname_CLDR_babel.tsv

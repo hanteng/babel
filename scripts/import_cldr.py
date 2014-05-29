@@ -154,15 +154,19 @@ def main():
         for map_zone in sup_windows_zones.findall(
                 './/windowsZones/mapTimezones/mapZone'):
             if map_zone.attrib.get('territory') == '001':
+                print repr(map_zone.attrib)#hanteng
                 win_mapping[map_zone.attrib['other']] = \
-                    map_zone.attrib['type'].split()[0]
+                    map_zone.attrib['type'].split()[0] 
             for tzid in text_type(map_zone.attrib['type']).split():
                 _zone_territory_map[tzid] = \
                     text_type(map_zone.attrib['territory'])
 
         for key_elem in bcp47_timezone.findall('.//keyword/key'):
             if key_elem.attrib['name'] == 'tz':
+                pass #hanteng see Deprecated values                 http://cldr.unicode.org/index/downloads/cldr-25
+            '''
                 for elem in key_elem.findall('type'):
+                    print repr(elem.attrib)#hanteng
                     aliases = text_type(elem.attrib['alias']).split()
                     tzid = aliases.pop(0)
                     territory = _zone_territory_map.get(tzid, '001')
@@ -171,6 +175,7 @@ def main():
                     for alias in aliases:
                         zone_aliases[alias] = tzid
                 break
+            '''
 
         # Import Metazone mapping
         meta_zones = global_data.setdefault('meta_zones', {})
@@ -186,7 +191,10 @@ def main():
             # pass our parser anyways.
             if '-' in alias.attrib['type']:
                 continue
-            language_aliases[alias.attrib['type']] = alias.attrib['replacement']
+            print repr(alias.attrib) #hanteng
+            print repr(alias.attrib.keys()) #hanteng
+            language_aliases[alias.attrib['type']] = alias.attrib.get('replacement','{N/A}')
+            #language_aliases[alias.attrib['type']] = alias.attrib.['replacement']
 
         # Territory aliases
         for alias in sup_metadata.findall('.//alias/territoryAlias'):
@@ -244,6 +252,8 @@ def main():
             containers.add(group)
 
     # prepare the per-locale plural rules definitions
+    #hanteng: temporary left out
+    '''
     plural_rules = {}
     prsup = parse(os.path.join(srcdir, 'supplemental', 'plurals.xml'))
     for elem in prsup.findall('.//plurals/pluralRules'):
@@ -253,6 +263,7 @@ def main():
         pr = PluralRule(rules)
         for locale in elem.attrib['locales'].split():
             plural_rules[locale] = pr
+    '''
 
     filenames = os.listdir(os.path.join(srcdir, 'main'))
     filenames.remove('root.xml')
@@ -290,12 +301,15 @@ def main():
             filename, language, territory)
 
         # plural rules
+        # hanteng: temporary left out for future development
+        '''
         locale_id = '_'.join(filter(None, [
             language,
             territory != '001' and territory or None
         ]))
         if locale_id in plural_rules:
             data['plural_form'] = plural_rules[locale_id]
+        '''
 
         # <localeDisplayNames>
 
