@@ -26,7 +26,7 @@ def import_from_babel_cldr():
     df_cldr.sort_index(inplace=True)
     
     for i_lang in completelist_languages:
-        #print i_lang
+        #print(i_lang)
         try:
             locale = Locale.parse(i_lang)
             df=pd.DataFrame.from_dict(locale.territories, orient="index")
@@ -57,13 +57,13 @@ if __name__ == "__main__":
 
     df_cldr=import_from_babel_cldr()
     if fn[-3:]=='csv':
-        print "Outputing to",fn
+        print ("Outputing to {}".format(fn))
         export_to_csv(df_cldr, ex_filename=os.path.join(path_script, fn), sep=',')
     elif fn[-3:]=='tsv':
-        print "Outputing to",fn
+        print ("Outputing to {}".format(fn))
         export_to_csv(df_cldr, ex_filename=os.path.join(path_script, fn), sep='\t')
     else:
-        print "Only csv and tsv formats can be generated. Sorry."
+        print ("Only csv and tsv formats can be generated. Sorry.")
 
 
     

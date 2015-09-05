@@ -146,6 +146,7 @@ def main():
         likely_subtags = global_data.setdefault('likely_subtags', {})
         territory_currencies = global_data.setdefault('territory_currencies', {})
         parent_exceptions = global_data.setdefault('parent_exceptions', {})
+        territory_containment = global_data.setdefault('territory_containment', {})
 
         # create auxiliary zone->territory map from the windows zones (we don't set
         # the 'zones_territories' map directly here, because there are some zones
@@ -155,9 +156,8 @@ def main():
         for map_zone in sup_windows_zones.findall(
                 './/windowsZones/mapTimezones/mapZone'):
             if map_zone.attrib.get('territory') == '001':
-                print repr(map_zone.attrib)#hanteng
                 win_mapping[map_zone.attrib['other']] = \
-                    map_zone.attrib['type'].split()[0] 
+                    map_zone.attrib['type'].split()[0]
             for tzid in text_type(map_zone.attrib['type']).split():
                 _zone_territory_map[tzid] = \
                     text_type(map_zone.attrib['territory'])
@@ -165,7 +165,6 @@ def main():
         for key_elem in bcp47_timezone.findall('.//keyword/key'):
             if key_elem.attrib['name'] == 'tz':
                 for elem in key_elem.findall('type'):
-                    print repr(elem.attrib)#hanteng
                     if 'deprecated' not in elem.attrib:
                         aliases = text_type(elem.attrib['alias']).split()
                         tzid = aliases.pop(0)
@@ -190,8 +189,8 @@ def main():
             # pass our parser anyways.
             if '_' in alias.attrib['type']:
                 continue
-            print repr(alias.attrib) #hanteng
-            print repr(alias.attrib.keys()) #hanteng
+            print(alias.attrib) #hanteng
+            print(alias.attrib.keys()) #hanteng
             language_aliases[alias.attrib['type']] = alias.attrib.get('replacement','{N/A}')
             #language_aliases[alias.attrib['type']] = alias.attrib.['replacement']
 
@@ -257,8 +256,6 @@ def main():
             containers.add(group)
 
     # prepare the per-locale plural rules definitions
-    #hanteng: temporary left out
-    '''
     plural_rules = {}
     prsup = parse(os.path.join(srcdir, 'supplemental', 'plurals.xml'))
     for elem in prsup.findall('.//plurals/pluralRules'):
@@ -268,7 +265,6 @@ def main():
         pr = PluralRule(rules)
         for locale in elem.attrib['locales'].split():
             plural_rules[locale] = pr
-    '''
 
     filenames = os.listdir(os.path.join(srcdir, 'main'))
     filenames.remove('root.xml')
@@ -306,24 +302,29 @@ def main():
             filename, language, territory)
 
         # plural rules
-        # hanteng: temporary left out for future development
-        '''
         locale_id = '_'.join(filter(None, [
             language,
             territory != '001' and territory or None
         ]))
         if locale_id in plural_rules:
             data['plural_form'] = plural_rules[locale_id]
-        '''
 
         # <localeDisplayNames>
+
+        # Expose territory containment
+        territory_c = data.setdefault('territory_c', territory_containment)
 
         territories = data.setdefault('territories', {})
         for elem in tree.findall('.//territories/territory'):
             if ('draft' in elem.attrib or 'alt' in elem.attrib) \
                     and elem.attrib['type'] in territories:
+                # Short names preferred and chosen
+                if ('alt' in elem.attrib):
+                    if ('short' in elem.attrib['alt']):
+                       territories[elem.attrib['type']] = _text(elem)
+                       print(_text(elem))
                 continue
-            territories[elem.attrib['type']] = _text(elem)
+            territories[elem.attrib['type']] = "!"#_text(elem)
 
         languages = data.setdefault('languages', {})
         for elem in tree.findall('.//languages/language'):
