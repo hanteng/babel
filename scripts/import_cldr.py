@@ -146,7 +146,8 @@ def main():
         likely_subtags = global_data.setdefault('likely_subtags', {})
         territory_currencies = global_data.setdefault('territory_currencies', {})
         parent_exceptions = global_data.setdefault('parent_exceptions', {})
-        territory_containment = global_data.setdefault('territory_containment', {})
+        territory_containment = global_data.setdefault('territory_containment', {})  #UN M49
+        territory_containment_extra = global_data.setdefault('territory_containment_extra', {})  #UN M49
 
         # create auxiliary zone->territory map from the windows zones (we don't set
         # the 'zones_territories' map directly here, because there are some zones
@@ -234,6 +235,26 @@ def main():
             for child in paternity.attrib['locales'].split():
                 parent_exceptions[child] = parent
 
+        # UN M49 Territory Containment
+        region_groups_deprecated = {}
+        region_groups_grouping = {}
+        for elem in sup.findall('.//territoryContainment/group'):
+            if ('status' in elem.attrib or 'grouping' in elem.attrib):
+                    if ('status' in elem.attrib and 'deprecated' in elem.attrib['status']):
+                            region_groups_deprecated[elem.attrib['type']] = elem.attrib['contains'].split()
+                    if ('status' in elem.attrib and 'grouping' in elem.attrib['status']):
+                            region_groups_grouping[elem.attrib['type']] = elem.attrib['contains'].split()
+                    if ('grouping' in elem.attrib and 'true' in elem.attrib['grouping']):
+                            region_groups_grouping[elem.attrib['type']] = elem.attrib['contains'].split()
+                    print("...extra...{} contains {}".format(elem.attrib['type'],  elem.attrib['contains']))
+                    continue
+            territory_containment[elem.attrib['type']] = elem.attrib['contains'].split()
+            print("{} contains {}".format(elem.attrib['type'],  elem.attrib['contains']))
+        territory_containment_extra ['deprecated'] = region_groups_deprecated
+        territory_containment_extra ['grouping']   = region_groups_grouping
+        #print(territory_containment)
+        #print(territory_containment_extra)
+        
         outfile = open(global_path, 'wb')
         try:
             pickle.dump(global_data, outfile, 2)
@@ -314,17 +335,21 @@ def main():
         # Expose territory containment
         territory_c = data.setdefault('territory_c', territory_containment)
 
+        # Short names preferred and selected. Other names are put in territories_long
         territories = data.setdefault('territories', {})
+        territories_long = data.setdefault('territories_long', {})
         for elem in tree.findall('.//territories/territory'):
             if ('draft' in elem.attrib or 'alt' in elem.attrib) \
                     and elem.attrib['type'] in territories:
-                # Short names preferred and chosen
-                if ('alt' in elem.attrib):
-                    if ('short' in elem.attrib['alt']):
-                       territories[elem.attrib['type']] = _text(elem)
-                       print(_text(elem))
-                continue
-            territories[elem.attrib['type']] = "!"#_text(elem)
+                    if ('alt' in elem.attrib and 'short' in elem.attrib['alt']):
+                           territories_long[elem.attrib['type']] = territories[elem.attrib['type']]
+                           territories[elem.attrib['type']] = _text(elem)
+                           continue
+                           #print(_text(elem))
+                    if ('alt' in elem.attrib and 'variant' in elem.attrib['alt']):
+                           territories_long[elem.attrib['type']] = _text(elem)
+                           continue
+            territories[elem.attrib['type']] = _text(elem)
 
         languages = data.setdefault('languages', {})
         for elem in tree.findall('.//languages/language'):
