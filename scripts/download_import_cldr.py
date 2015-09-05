@@ -13,15 +13,9 @@ except ImportError:
     from urllib import urlretrieve
 
 
-<<<<<<< HEAD
 URL = 'http://unicode.org/Public/cldr/27.0.1/core.zip'
 FILENAME = 'core.zip'
 FILESUM = '132b6bf3bfdf5c00b382c0e4b1bfe557'
-=======
-URL = 'http://unicode.org/Public/cldr/26/core.zip'
-FILENAME = 'core-26.zip'
-FILESUM = '46220170238b092685fd24221f895e3d'
->>>>>>> mitsuhiko/master
 BLKSIZE = 131072
 
 
