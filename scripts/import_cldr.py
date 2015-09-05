@@ -145,6 +145,7 @@ def main():
         variant_aliases = global_data.setdefault('variant_aliases', {})
         likely_subtags = global_data.setdefault('likely_subtags', {})
         territory_currencies = global_data.setdefault('territory_currencies', {})
+        parent_exceptions = global_data.setdefault('parent_exceptions', {})
 
         # create auxiliary zone->territory map from the windows zones (we don't set
         # the 'zones_territories' map directly here, because there are some zones
@@ -166,6 +167,7 @@ def main():
                 pass #hanteng see Deprecated values                 http://cldr.unicode.org/index/downloads/cldr-25
             '''
                 for elem in key_elem.findall('type'):
+<<<<<<< HEAD
                     print repr(elem.attrib)#hanteng
                     aliases = text_type(elem.attrib['alias']).split()
                     tzid = aliases.pop(0)
@@ -174,6 +176,16 @@ def main():
                     zone_territories[tzid] = territory
                     for alias in aliases:
                         zone_aliases[alias] = tzid
+=======
+                    if 'deprecated' not in elem.attrib:
+                        aliases = text_type(elem.attrib['alias']).split()
+                        tzid = aliases.pop(0)
+                        territory = _zone_territory_map.get(tzid, '001')
+                        territory_zones.setdefault(territory, []).append(tzid)
+                        zone_territories[tzid] = territory
+                        for alias in aliases:
+                            zone_aliases[alias] = tzid
+>>>>>>> mitsuhiko/master
                 break
             '''
 
@@ -189,7 +201,7 @@ def main():
         for alias in sup_metadata.findall('.//alias/languageAlias'):
             # We don't have a use for those at the moment.  They don't
             # pass our parser anyways.
-            if '-' in alias.attrib['type']:
+            if '_' in alias.attrib['type']:
                 continue
             print repr(alias.attrib) #hanteng
             print repr(alias.attrib.keys()) #hanteng
@@ -229,6 +241,12 @@ def main():
                                               'tender', 'true') == 'true'))
             region_currencies.sort(key=_currency_sort_key)
             territory_currencies[region_code] = region_currencies
+
+        # Explicit parent locales
+        for paternity in sup.findall('.//parentLocales/parentLocale'):
+            parent = paternity.attrib['parent']
+            for child in paternity.attrib['locales'].split():
+                parent_exceptions[child] = parent
 
         outfile = open(global_path, 'wb')
         try:
@@ -623,14 +641,25 @@ def main():
         # <units>
 
         unit_patterns = data.setdefault('unit_patterns', {})
-        for elem in tree.findall('.//units/unit'):
-            unit_type = elem.attrib['type']
-            for pattern in elem.findall('unitPattern'):
-                box = unit_type
-                if 'alt' in pattern.attrib:
-                    box += ':' + pattern.attrib['alt']
-                unit_patterns.setdefault(box, {})[pattern.attrib['count']] = \
-                    text_type(pattern.text)
+        for elem in tree.findall('.//units/unitLength'):
+            unit_length_type = elem.attrib['type']
+            for unit in elem.findall('unit'):
+                unit_type = unit.attrib['type']
+                for pattern in unit.findall('unitPattern'):
+                    box = unit_type
+                    box += ':' + unit_length_type
+                    unit_patterns.setdefault(box, {})[pattern.attrib['count']] = \
+                        text_type(pattern.text)
+
+        date_fields = data.setdefault('date_fields', {})
+        for elem in tree.findall('.//dates/fields/field'):
+            field_type = elem.attrib['type']
+            date_fields.setdefault(field_type, {})
+            for rel_time in elem.findall('relativeTime'):
+                rel_time_type = rel_time.attrib['type']
+                for pattern in rel_time.findall('relativeTimePattern'):
+                    date_fields[field_type].setdefault(rel_time_type, {})\
+                        [pattern.attrib['count']] = text_type(pattern.text)
 
         outfile = open(data_filename, 'wb')
         try:

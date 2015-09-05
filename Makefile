@@ -1,5 +1,8 @@
 test: import-cldr
-	@PYTHONWARNINGS=default py.test
+	@PYTHONWARNINGS=default python -m pytest
+
+test-cov: import-cldr
+	@PYTHONWARNINGS=default python -m pytest --cov=babel
 
 test-env:
 	@virtualenv test-env
@@ -18,8 +21,8 @@ import-cldr:
 	@python scripts/download_import_cldr.py
 
 clean-cldr:
-	@rm babel/localedata/*.dat
-	@rm babel/global.dat
+	@rm -f babel/localedata/*.dat
+	@rm -f babel/global.dat
 
 clean-pyc:
 	@find . -name '*.pyc' -exec rm {} \;
